@@ -3,544 +3,1266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DeepSeek 角色聊天</title>
+    <title>DeepSeek 角色宇宙</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0d0d1a;
+            --surface: #1a1a2e;
+            --surface-light: #2a2a44;
+            --text: #e8e8f0;
+            --text-secondary: #9999b0;
+            --border: #3a3a5a;
+            --primary: #6c5ce7;
+            --primary-light: #a29bfe;
+            --accent: #00d2d3;
+            --danger: #ff6b6b;
+            --success: #55efc4;
+            --gold: #fdcb6e;
+        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 16px;
+            padding: 10px;
         }
-        .container {
-            max-width: 600px;
+        .app {
+            max-width: 800px;
             width: 100%;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            overflow: hidden;
+            height: 98vh;
+            max-height: 950px;
+            background: var(--surface);
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
-            height: 95vh;
-            max-height: 850px;
+            overflow: hidden;
+            border: 1px solid var(--border);
         }
-        /* 头部 */
+
+        /* 顶部栏 */
         .header {
-            background: #1a1a2e;
-            color: white;
-            padding: 14px 18px;
+            background: var(--surface);
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-shrink: 0;
+            gap: 6px;
+            flex-wrap: wrap;
         }
-        .header h1 { font-size: 20px; font-weight: 600; }
+        .header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .header-left h1 { font-size: 17px; font-weight: 700; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .badge {
+            background: var(--primary);
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            -webkit-text-fill-color: white;
+        }
+        .badge.gold { background: var(--gold); color: #1a1a2e; }
+        .header-actions { display: flex; gap: 4px; flex-wrap: wrap; }
         .header-actions button {
-            background: rgba(255,255,255,0.15);
-            border: none;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 13px;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 11px;
             cursor: pointer;
             transition: 0.2s;
-            margin-left: 6px;
         }
-        .header-actions button:hover { background: rgba(255,255,255,0.25); }
+        .header-actions button:hover { background: var(--primary); border-color: var(--primary); }
 
-        /* 角色设定面板 - 可折叠 */
-        .role-panel {
-            background: #f0f2f5;
-            padding: 10px 16px 16px;
-            border-bottom: 1px solid #e2e8f0;
+        /* 主面板 - 三栏切换 */
+        .tabs {
+            display: flex;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
             flex-shrink: 0;
         }
-        .role-panel .toggle {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .tabs button {
+            flex: 1;
+            padding: 8px 6px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 12px;
             cursor: pointer;
-            user-select: none;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
         }
-        .role-panel .toggle span { font-weight: 500; color: #1a1a2e; }
-        .role-panel .toggle .arrow { transition: transform 0.3s; font-size: 14px; }
-        .role-panel .toggle .arrow.open { transform: rotate(180deg); }
-        .role-content {
+        .tabs button.active { color: var(--text); border-bottom-color: var(--primary); }
+        .tabs button:hover { color: var(--text); }
+
+        .tab-content {
+            flex: 1;
+            overflow: hidden;
             display: none;
-            margin-top: 10px;
             flex-direction: column;
-            gap: 8px;
         }
-        .role-content.open { display: flex; }
-        .role-content textarea {
-            width: 100%;
+        .tab-content.active { display: flex; }
+
+        /* ===== 角色面板 ===== */
+        .role-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .role-panel-body::-webkit-scrollbar { width: 4px; }
+        .role-panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .role-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .role-selector .tag {
+            background: var(--surface-light);
+            padding: 4px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .role-selector .tag.active { border-color: var(--primary); background: var(--primary); }
+        .role-selector .tag .del { color: var(--text-secondary); cursor: pointer; font-size: 14px; }
+        .role-selector .tag .del:hover { color: var(--danger); }
+
+        .role-editor {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 10px;
+            background: var(--bg);
             padding: 10px;
-            border: 1px solid #ccc;
             border-radius: 10px;
-            font-size: 14px;
-            resize: vertical;
-            min-height: 60px;
+            border: 1px solid var(--border);
+        }
+        .role-editor .full { grid-column: 1 / -1; }
+        .role-editor label { font-size: 11px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 2px; }
+        .role-editor input, .role-editor textarea {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 13px;
             font-family: inherit;
         }
-        .role-content .presets {
+        .role-editor input:focus, .role-editor textarea:focus { border-color: var(--primary); outline: none; }
+        .role-editor textarea { resize: vertical; min-height: 40px; }
+
+        .role-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+        .role-actions button {
+            padding: 4px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { opacity: 0.85; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { opacity: 0.85; }
+        .btn-secondary { background: var(--surface-light); color: var(--text); }
+        .btn-secondary:hover { background: var(--border); }
+        .btn-success { background: var(--success); color: #1a1a2e; }
+        .btn-success:hover { opacity: 0.85; }
+        .btn-gold { background: var(--gold); color: #1a1a2e; }
+        .btn-gold:hover { opacity: 0.85; }
+
+        /* ===== 场景/分支面板 ===== */
+        .scene-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .scene-panel-body::-webkit-scrollbar { width: 4px; }
+        .scene-panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .branch-list {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
         }
-        .role-content .presets button {
-            background: #e9ecef;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 20px;
+        .branch-item {
+            background: var(--surface-light);
+            padding: 6px 14px;
+            border-radius: 10px;
             font-size: 13px;
             cursor: pointer;
+            border: 2px solid transparent;
             transition: 0.2s;
-        }
-        .role-content .presets button:hover { background: #d1d5db; }
-        .role-content .actions {
             display: flex;
-            gap: 10px;
-            margin-top: 4px;
+            align-items: center;
+            gap: 8px;
         }
-        .role-content .actions button {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 8px;
-            background: #007aff;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .role-content .actions button:active { transform: scale(0.95); }
-        .role-content .actions .btn-secondary { background: #6c757d; }
+        .branch-item.active { border-color: var(--gold); background: #2a2a3a; }
+        .branch-item .del { color: var(--text-secondary); cursor: pointer; }
+        .branch-item .del:hover { color: var(--danger); }
 
-        /* 聊天框 */
-        #chatbox {
+        .scene-editor {
+            background: var(--bg);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .scene-editor input, .scene-editor textarea {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        .scene-editor textarea { resize: vertical; min-height: 60px; }
+        .scene-editor input:focus, .scene-editor textarea:focus { border-color: var(--primary); outline: none; }
+
+        .scene-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .scene-meta label { font-size: 11px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 2px; }
+
+        /* ===== 模拟器面板 ===== */
+        .sim-panel-body {
             flex: 1;
             overflow-y: auto;
-            padding: 14px 18px;
-            background: #f9fafc;
+            padding: 12px 14px;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
+        .sim-panel-body::-webkit-scrollbar { width: 4px; }
+        .sim-panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .sim-list { display: flex; flex-wrap: wrap; gap: 6px; }
+        .sim-item {
+            background: var(--surface-light);
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sim-item.active { border-color: var(--accent); }
+        .sim-item .del { color: var(--text-secondary); cursor: pointer; }
+        .sim-item .del:hover { color: var(--danger); }
+
+        .sim-editor {
+            background: var(--bg);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .sim-editor input, .sim-editor textarea, .sim-editor select {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        .sim-editor textarea { resize: vertical; min-height: 60px; }
+        .sim-editor .sim-type-select { display: flex; gap: 6px; }
+        .sim-editor .sim-type-select button {
+            padding: 3px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .sim-editor .sim-type-select button.active { border-color: var(--accent); color: var(--text); background: var(--surface-light); }
+
+        /* ===== 聊天区域 ===== */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+            min-height: 200px;
+        }
+        #chatbox {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        #chatbox::-webkit-scrollbar { width: 4px; }
+        #chatbox::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
         .message {
-            max-width: 85%;
-            padding: 10px 14px;
-            border-radius: 18px;
+            max-width: 88%;
+            padding: 8px 14px;
+            border-radius: 14px;
             word-wrap: break-word;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.25s ease;
+            font-size: 14px;
+            line-height: 1.5;
         }
-        .user-msg {
-            align-self: flex-end;
-            background: #007aff;
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-        .ai-msg {
-            align-self: flex-start;
-            background: #e9ecef;
-            color: #1e1e2a;
-            border-bottom-left-radius: 4px;
-        }
-        .ai-msg.error { background: #ffe0e0; color: #b00020; }
-        .loading-dots::after {
-            content: '...';
-            animation: dots 1.2s steps(4) infinite;
-        }
-        @keyframes dots {
-            0% { content: ''; }
-            25% { content: '.'; }
-            50% { content: '..'; }
-            75% { content: '...'; }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .user-msg { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+        .ai-msg { align-self: flex-start; background: var(--surface-light); color: var(--text); border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+        .ai-msg .role-label { font-size: 10px; color: var(--primary-light); font-weight: 600; margin-bottom: 2px; }
+        .ai-msg.error { background: #3a1a1a; color: var(--danger); border-color: var(--danger); }
+        .loading-dots::after { content: '...'; animation: dots 1.2s steps(4) infinite; }
+        @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
         /* 输入区 */
-        #input-area {
+        .input-area {
             display: flex;
-            padding: 10px 14px;
-            background: white;
-            border-top: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
             flex-shrink: 0;
-            gap: 10px;
+            gap: 6px;
         }
-        #user-input {
+        .input-area input {
             flex: 1;
-            padding: 10px 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 24px;
-            font-size: 16px;
+            padding: 8px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            color: var(--text);
+            font-size: 14px;
             outline: none;
+            font-family: inherit;
         }
-        #user-input:focus { border-color: #007aff; }
-        #send-btn {
-            background: #007aff;
+        .input-area input:focus { border-color: var(--primary); }
+        .input-area input::placeholder { color: var(--text-secondary); }
+        .input-area button {
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 24px;
-            padding: 0 20px;
-            font-size: 16px;
-            font-weight: 500;
+            border-radius: 18px;
+            padding: 0 18px;
+            font-size: 14px;
             cursor: pointer;
             transition: 0.2s;
+            white-space: nowrap;
         }
-        #send-btn:active { transform: scale(0.95); }
-        #send-btn:disabled { opacity: 0.6; pointer-events: none; }
+        .input-area button:active { transform: scale(0.95); }
+        .input-area button:disabled { opacity: 0.5; pointer-events: none; }
 
-        .footer-note {
+        .cmd-hint {
+            font-size: 10px;
+            color: var(--text-secondary);
+            padding: 2px 14px;
+            background: var(--bg);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .cmd-hint span { background: var(--surface-light); padding: 0 8px; border-radius: 4px; font-size: 10px; }
+
+        .footer {
             text-align: center;
-            font-size: 12px;
-            color: #888;
-            padding: 6px 0;
-            background: white;
-            border-top: 1px solid #f0f0f0;
+            font-size: 10px;
+            color: var(--text-secondary);
+            padding: 3px 0;
+            border-top: 1px solid var(--border);
             flex-shrink: 0;
+            background: var(--surface);
         }
-        .footer-note a { color: #007aff; text-decoration: none; }
+        .footer a { color: var(--primary-light); text-decoration: none; }
 
-        #chatbox::-webkit-scrollbar { width: 4px; }
-        #chatbox::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        @media (max-width: 600px) {
+            .role-editor { grid-template-columns: 1fr; }
+            .scene-meta { grid-template-columns: 1fr; }
+            .header-left h1 { font-size: 15px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- 头部 -->
+<div class="app">
+    <!-- 顶部 -->
     <div class="header">
-        <h1>🤖 角色聊天</h1>
+        <div class="header-left">
+            <h1>🌌 角色宇宙</h1>
+            <span class="badge" id="current-role-badge">未选</span>
+            <span class="badge gold" id="current-scene-badge">主线</span>
+        </div>
         <div class="header-actions">
-            <button id="reset-key-btn">🔑 更换密钥</button>
+            <button id="reset-key-btn">🔑 API</button>
         </div>
     </div>
 
-    <!-- 角色设定面板 -->
-    <div class="role-panel">
-        <div class="toggle" id="role-toggle">
-            <span>🎭 角色设定（点击展开）</span>
-            <span class="arrow" id="role-arrow">▼</span>
-        </div>
-        <div class="role-content" id="role-content">
-            <textarea id="system-prompt" placeholder="输入系统提示词，定义 AI 的角色..."></textarea>
-            <div class="presets">
-                <button data-preset="default">默认助手</button>
-                <button data-preset="programmer">程序员</button>
-                <button data-preset="poet">诗人</button>
-                <button data-preset="psychologist">心理咨询师</button>
+    <!-- Tab 导航 -->
+    <div class="tabs">
+        <button class="active" data-tab="tab-roles">👤 角色</button>
+        <button data-tab="tab-scenes">🎭 场景/分支</button>
+        <button data-tab="tab-sims">⚙️ 模拟器</button>
+    </div>
+
+    <!-- Tab 内容 -->
+    <div class="tab-content active" id="tab-roles">
+        <div class="role-panel-body">
+            <div class="role-selector" id="role-selector"></div>
+            <div class="role-editor" id="role-editor">
+                <label>角色名 <input id="rf-name" placeholder="如：林雪"></label>
+                <label>标签 <input id="rf-tags" placeholder="女, 剑士, 18岁"></label>
+                <label class="full">背景 <textarea id="rf-bg" rows="2" placeholder="身世、经历..."></textarea></label>
+                <label class="full">性格/外貌 <textarea id="rf-persona" rows="2" placeholder="性格特点、外貌特征..."></textarea></label>
+                <label class="full">特殊设定 <textarea id="rf-special" rows="2" placeholder="隐藏身份、特殊能力..."></textarea></label>
+                <div class="role-actions">
+                    <button class="btn-primary" id="save-role-btn">💾 保存</button>
+                    <button class="btn-secondary" id="new-role-btn">➕ 新建</button>
+                    <button class="btn-danger" id="delete-role-btn">🗑️ 删除</button>
+                </div>
             </div>
-            <div class="actions">
-                <button id="save-role-btn">💾 保存设定</button>
-                <button id="reset-role-btn" class="btn-secondary">↺ 恢复默认</button>
+            <div style="font-size:11px; color:var(--text-secondary); padding:4px 0;">
+                💡 指令: <span style="background:var(--surface-light);padding:0 8px;border-radius:4px;">/new 角色名</span>
+                <span style="background:var(--surface-light);padding:0 8px;border-radius:4px;">/switch 角色名</span>
+                <span style="background:var(--surface-light);padding:0 8px;border-radius:4px;">/del 角色名</span>
             </div>
         </div>
     </div>
 
-    <!-- 聊天框 -->
-    <div id="chatbox">
-        <div class="ai-msg" style="align-self:center; color:#999; font-size:14px; max-width:100%; background:transparent;">
-            👋 你好！设定角色后开始对话吧。
+    <div class="tab-content" id="tab-scenes">
+        <div class="scene-panel-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                <span style="font-size:13px; font-weight:600;">📂 场景分支 (存档SL)</span>
+                <button class="btn-secondary" id="new-branch-btn" style="font-size:12px;padding:2px 12px;">+ 新建分支</button>
+            </div>
+            <div class="branch-list" id="branch-list"></div>
+
+            <div class="scene-editor" id="scene-editor">
+                <input id="scene-name" placeholder="场景名称 (如: 纯爱线)">
+                <textarea id="scene-desc" rows="2" placeholder="场景描述/当前进展..."></textarea>
+                <div class="scene-meta">
+                    <label>标签 <input id="scene-tags" placeholder="恋爱, 日常"></label>
+                    <label>关联角色 <input id="scene-characters" placeholder="林雪, 路人甲"></label>
+                </div>
+                <textarea id="scene-notes" rows="2" placeholder="隐藏设定、伏笔、未解锁内容..."></textarea>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button class="btn-primary" id="save-scene-btn">💾 保存场景</button>
+                    <button class="btn-success" id="save-snapshot-btn">📸 存档快照</button>
+                    <button class="btn-gold" id="load-snapshot-btn">📂 读档</button>
+                    <button class="btn-danger" id="delete-scene-btn">🗑️ 删除</button>
+                </div>
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">
+                    💡 在聊天中输入 <span style="background:var(--surface-light);padding:0 8px;border-radius:4px;">/scene 新场景描述</span> 可快速创建新场景
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 输入区 -->
-    <div id="input-area">
-        <input type="text" id="user-input" placeholder="输入你的问题..." autofocus>
-        <button id="send-btn">发送</button>
+    <div class="tab-content" id="tab-sims">
+        <div class="sim-panel-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                <span style="font-size:13px; font-weight:600;">⚙️ 模拟器</span>
+                <button class="btn-secondary" id="new-sim-btn" style="font-size:12px;padding:2px 12px;">+ 新建模拟器</button>
+            </div>
+            <div class="sim-list" id="sim-list"></div>
+
+            <div class="sim-editor" id="sim-editor">
+                <input id="sim-name" placeholder="模拟器名称 (如: 修仙RPG)">
+                <div class="sim-type-select">
+                    <button class="active" data-simtype="style">🎨 风格模拟器</button>
+                    <button data-simtype="world">🌍 世界观RPG</button>
+                </div>
+                <textarea id="sim-desc" rows="2" placeholder="描述这个模拟器的功能/风格..."></textarea>
+                <textarea id="sim-system" rows="3" placeholder="系统提示词/世界观规则...&#10;如: 这是一个修仙世界，境界分为练气、筑基、金丹..."></textarea>
+                <textarea id="sim-ui" rows="2" placeholder="UI/交互特化描述 (如: 模拟弹幕、APP界面、催眠系统...)"></textarea>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button class="btn-primary" id="save-sim-btn">💾 保存</button>
+                    <button class="btn-danger" id="delete-sim-btn">🗑️ 删除</button>
+                    <button class="btn-success" id="apply-sim-btn">🚀 应用此模拟器</button>
+                </div>
+            </div>
+            <div style="font-size:11px; color:var(--text-secondary); padding:4px 0;">
+                💡 应用模拟器后，所有对话将基于该模拟器的设定进行
+            </div>
+        </div>
     </div>
-    <div class="footer-note">
-        <span>数据仅保存在本地 · </span>
-        <a href="#" id="clear-storage-link">清除本地数据</a>
+
+    <!-- 聊天区域 -->
+    <div class="chat-area">
+        <div id="chatbox">
+            <div class="ai-msg" style="align-self:center; color:var(--text-secondary); max-width:100%; background:transparent; border:none; font-size:13px;">
+                🌟 选择角色和场景，开始你的故事
+            </div>
+        </div>
+        <div class="cmd-hint">
+            <span>/scene 描述</span> <span>/new 角色名</span> <span>/switch 角色</span>
+            <span>/sim 模拟器名</span> <span>/clear</span> <span>/help</span>
+        </div>
+        <div class="input-area">
+            <input id="user-input" placeholder="输入消息或 /指令..." autofocus>
+            <button id="send-btn">发送</button>
+        </div>
+        <div class="footer">
+            <span>数据本地存储 · </span>
+            <a href="#" id="clear-all-link">清除所有数据</a>
+        </div>
     </div>
 </div>
 
 <script>
-    // ==========================================
-    //  核心逻辑
-    // ==========================================
+// ============================================================
+//  完整宇宙系统 - 角色 + 场景分支 + 模拟器
+// ============================================================
 
-    // DOM 引用
-    const chatbox = document.getElementById('chatbox');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
-    const resetKeyBtn = document.getElementById('reset-key-btn');
-    const clearStorageLink = document.getElementById('clear-storage-link');
-
-    // 角色相关
-    const systemPromptTextarea = document.getElementById('system-prompt');
-    const saveRoleBtn = document.getElementById('save-role-btn');
-    const resetRoleBtn = document.getElementById('reset-role-btn');
-    const roleToggle = document.getElementById('role-toggle');
-    const roleContent = document.getElementById('role-content');
-    const roleArrow = document.getElementById('role-arrow');
-
-    // 状态
-    let API_KEY = '';
-    let currentSystemPrompt = 'You are a helpful assistant.';
-
-    // ---------- 预设角色 ----------
-    const PRESETS = {
-        default: 'You are a helpful assistant.',
-        programmer: '你是一名资深程序员，擅长用清晰、简洁的方式解释技术概念，并提供代码示例。',
-        poet: '你是一位富有诗意的诗人，用优美、含蓄的语言表达情感和思想，回答充满文学性。',
-        psychologist: '你是一位温暖、善解人意的心理咨询师，倾听问题，给予支持和共情的回应。'
-    };
-
-    // ---------- 角色设定管理 ----------
-    function loadSystemPrompt() {
-        const saved = localStorage.getItem('deepseek_system_prompt');
-        if (saved) {
-            currentSystemPrompt = saved;
-            systemPromptTextarea.value = saved;
-        } else {
-            // 默认
-            currentSystemPrompt = PRESETS.default;
-            systemPromptTextarea.value = currentSystemPrompt;
-            localStorage.setItem('deepseek_system_prompt', currentSystemPrompt);
+// ---------- 数据模型 ----------
+const DEFAULT_DATA = {
+    roles: {
+        'default': {
+            id: 'default',
+            name: '默认助手',
+            tags: '通用AI',
+            background: '一个乐于助人的智能助手。',
+            persona: '友好、耐心、知识渊博。',
+            special: '',
+            history: []
         }
-    }
+    },
+    currentRoleId: 'default',
+    scenes: {},        // { sceneId: { id, name, desc, tags, characters, notes, history: [], snapshots: [] } }
+    currentSceneId: null,
+    simulators: {},    // { simId: { id, name, type: 'style'|'world', desc, systemPrompt, uiDesc } }
+    currentSimId: null,
+    activeSimId: null  // 当前激活的模拟器
+};
 
-    function saveSystemPrompt(prompt) {
-        currentSystemPrompt = prompt;
-        localStorage.setItem('deepseek_system_prompt', prompt);
-        systemPromptTextarea.value = prompt;
-        // 可选：显示提示
-    }
+// ---------- 状态 ----------
+let data = null;
+let apiKey = '';
+let currentTab = 'tab-roles';
 
-    function resetSystemPrompt() {
-        saveSystemPrompt(PRESETS.default);
-        // 也可刷新界面
-    }
+// ---------- DOM ----------
+const $ = id => document.getElementById(id);
+const chatbox = $('chatbox');
+const userInput = $('user-input');
+const sendBtn = $('send-btn');
+const roleSelector = $('role-selector');
+const branchList = $('branch-list');
+const simList = $('sim-list');
+const currentRoleBadge = $('current-role-badge');
+const currentSceneBadge = $('current-scene-badge');
 
-    // 应用预设
-    function applyPreset(presetKey) {
-        const prompt = PRESETS[presetKey];
-        if (prompt) {
-            saveSystemPrompt(prompt);
-        }
-    }
+// 角色表单
+const rfName = $('rf-name'), rfTags = $('rf-tags'), rfBg = $('rf-bg'), rfPersona = $('rf-persona'), rfSpecial = $('rf-special');
 
-    // ---------- API Key 管理 ----------
-    function loadOrPromptKey() {
-        const saved = localStorage.getItem('deepseek_api_key');
+// 场景表单
+const sceneName = $('scene-name'), sceneDesc = $('scene-desc'), sceneTags = $('scene-tags'), sceneCharacters = $('scene-characters'), sceneNotes = $('scene-notes');
+
+// 模拟器表单
+const simName = $('sim-name'), simDesc = $('sim-desc'), simSystem = $('sim-system'), simUi = $('sim-ui');
+
+// ---------- 数据持久化 ----------
+function loadData() {
+    try {
+        const saved = localStorage.getItem('deepseek_universe_data');
         if (saved) {
-            API_KEY = saved;
+            const parsed = JSON.parse(saved);
+            data = parsed;
+            // 确保默认角色存在
+            if (!data.roles || !data.roles['default']) {
+                data.roles = { 'default': { ...DEFAULT_DATA.roles['default'], id: 'default' } };
+            }
+            if (!data.currentRoleId || !data.roles[data.currentRoleId]) {
+                data.currentRoleId = 'default';
+            }
+            if (!data.scenes) data.scenes = {};
+            if (!data.simulators) data.simulators = {};
             return true;
-        } else {
-            const key = prompt('请输入你的 DeepSeek API Key (以 sk- 开头):');
-            if (key && key.trim().startsWith('sk-')) {
-                API_KEY = key.trim();
-                localStorage.setItem('deepseek_api_key', API_KEY);
-                return true;
-            } else if (key !== null) {
-                alert('API Key 格式不正确，请以 sk- 开头。');
-                return loadOrPromptKey();
-            } else {
-                alert('未输入 API Key，页面将无法正常工作。');
-                return false;
-            }
         }
+    } catch (e) { console.warn('加载数据失败', e); }
+    data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    return false;
+}
+
+function saveData() {
+    try {
+        localStorage.setItem('deepseek_universe_data', JSON.stringify(data));
+    } catch (e) { console.warn('保存失败', e); }
+}
+
+function loadApiKey() {
+    const saved = localStorage.getItem('deepseek_api_key');
+    if (saved) { apiKey = saved; return true; }
+    return false;
+}
+
+function saveApiKey(key) { apiKey = key; localStorage.setItem('deepseek_api_key', key); }
+
+// ---------- 辅助函数 ----------
+function getRole(id) { return data.roles[id]; }
+function getCurrentRole() { return data.roles[data.currentRoleId] || data.roles['default']; }
+function getScene(id) { return data.scenes[id]; }
+function getCurrentScene() {
+    if (data.currentSceneId && data.scenes[data.currentSceneId]) return data.scenes[data.currentSceneId];
+    // 自动创建默认场景
+    const role = getCurrentRole();
+    const defaultSceneId = 'scene_' + role.id + '_default';
+    if (!data.scenes[defaultSceneId]) {
+        data.scenes[defaultSceneId] = {
+            id: defaultSceneId,
+            name: '主线',
+            desc: `与「${role.name}」的主线故事`,
+            tags: '主线, 默认',
+            characters: role.name,
+            notes: '',
+            history: [],
+            snapshots: []
+        };
+        saveData();
+    }
+    data.currentSceneId = defaultSceneId;
+    return data.scenes[defaultSceneId];
+}
+function getSim(id) { return data.simulators[id]; }
+function getActiveSim() { return data.activeSimId ? data.simulators[data.activeSimId] : null; }
+
+function buildFullSystemPrompt() {
+    const role = getCurrentRole();
+    const scene = getCurrentScene();
+    const sim = getActiveSim();
+    const parts = [];
+
+    // 角色设定
+    parts.push(`# 角色设定`);
+    parts.push(`你扮演的角色是「${role.name}」。`);
+    if (role.tags) parts.push(`标签：${role.tags}`);
+    if (role.background) parts.push(`背景：${role.background}`);
+    if (role.persona) parts.push(`性格/外貌：${role.persona}`);
+    if (role.special) parts.push(`特殊设定：${role.special}`);
+
+    // 场景设定
+    parts.push(`\n# 当前场景`);
+    parts.push(`场景名称：${scene.name}`);
+    if (scene.desc) parts.push(`场景描述：${scene.desc}`);
+    if (scene.tags) parts.push(`场景标签：${scene.tags}`);
+    if (scene.characters) parts.push(`关联角色：${scene.characters}`);
+    if (scene.notes) parts.push(`隐藏设定：${scene.notes}`);
+
+    // 模拟器设定
+    if (sim) {
+        parts.push(`\n# 模拟器模式：${sim.name} (${sim.type === 'world' ? '世界观RPG' : '风格模拟器'})`);
+        if (sim.desc) parts.push(`描述：${sim.desc}`);
+        if (sim.systemPrompt) parts.push(`\n${sim.systemPrompt}`);
+        if (sim.uiDesc) parts.push(`\n交互风格：${sim.uiDesc}`);
     }
 
-    function resetKey() {
-        localStorage.removeItem('deepseek_api_key');
-        API_KEY = '';
-        const success = loadOrPromptKey();
-        if (success) {
-            alert('新密钥已保存！');
-            chatbox.innerHTML = `<div class="ai-msg" style="align-self:center; color:#999; font-size:14px; max-width:100%; background:transparent;">
-                🔑 密钥已更新，开始新对话吧。
-            </div>`;
-        } else {
-            alert('未设置密钥，请刷新页面重试。');
-        }
+    parts.push('\n# 指令');
+    parts.push('请完全代入角色，用符合角色设定和场景的语气回应。');
+    parts.push('你可以推动剧情发展，创造新的场景元素。');
+    if (sim && sim.type === 'world') {
+        parts.push('这是一个完整的世界观RPG，请严格遵守世界规则，保持沉浸感。');
     }
 
-    function clearAllData() {
-        if (confirm('确认清除所有本地数据（API Key 和角色设定）？')) {
-            localStorage.removeItem('deepseek_api_key');
-            localStorage.removeItem('deepseek_system_prompt');
-            API_KEY = '';
-            loadSystemPrompt(); // 重置为默认
-            chatbox.innerHTML = `<div class="ai-msg" style="align-self:center; color:#999; font-size:14px; max-width:100%; background:transparent;">
-                🗑️ 本地数据已清除，请重新设置。
-            </div>`;
-            alert('已清除所有本地数据。');
-            // 禁用发送按钮直到有 Key
-            sendBtn.disabled = true;
-            // 尝试重新加载 Key
-            loadOrPromptKey();
-            if (API_KEY) sendBtn.disabled = false;
-        }
-    }
+    return parts.join('\n');
+}
 
-    // ---------- 发送消息 ----------
-    async function sendMessage() {
-        const text = userInput.value.trim();
-        if (!text) return;
-
-        if (!API_KEY) {
-            alert('请先设置 API Key（点击右上角"更换密钥"）。');
-            return;
-        }
-
-        // 获取当前系统提示（可能用户已修改文本域但未保存，我们使用已保存的 currentSystemPrompt）
-        // 但为了实时性，也可以直接读取 textarea 的值，但保留保存机制，建议使用 currentSystemPrompt
-        // 为方便，我们发送时使用 currentSystemPrompt（即保存的）
-        const systemMsg = currentSystemPrompt;
-
-        appendMessage('user', text);
-        userInput.value = '';
-        userInput.focus();
-
-        const loadingId = 'loading-' + Date.now();
-        const loadingDiv = document.createElement('div');
-        loadingDiv.className = 'message ai-msg';
-        loadingDiv.id = loadingId;
-        loadingDiv.innerHTML = '<span class="loading-dots">AI 正在思考</span>';
-        chatbox.appendChild(loadingDiv);
-        scrollToBottom();
-
-        sendBtn.disabled = true;
-
-        try {
-            const response = await fetch('https://api.deepseek.com/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${API_KEY}`
-                },
-                body: JSON.stringify({
-                    model: 'deepseek-chat',
-                    messages: [
-                        { role: 'system', content: systemMsg },
-                        { role: 'user', content: text }
-                    ],
-                    stream: false
-                })
-            });
-
-            const loadingEl = document.getElementById(loadingId);
-            if (loadingEl) loadingEl.remove();
-
-            if (!response.ok) {
-                let errorMsg = `请求失败 (${response.status})`;
-                try {
-                    const errData = await response.json();
-                    if (errData.error && errData.error.message) {
-                        errorMsg += `: ${errData.error.message}`;
-                    }
-                } catch (e) {}
-                throw new Error(errorMsg);
-            }
-
-            const data = await response.json();
-            const aiReply = data.choices[0].message.content || '（无内容）';
-            appendMessage('ai', aiReply);
-
-        } catch (error) {
-            const loadingEl = document.getElementById(loadingId);
-            if (loadingEl) loadingEl.remove();
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'message ai-msg error';
-            errorDiv.textContent = '❌ ' + error.message;
-            chatbox.appendChild(errorDiv);
-            scrollToBottom();
-            console.error('API 调用错误:', error);
-        } finally {
-            sendBtn.disabled = false;
-        }
-    }
-
-    // ---------- 辅助 ----------
-    function appendMessage(type, content) {
-        const div = document.createElement('div');
-        div.className = `message ${type === 'user' ? 'user-msg' : 'ai-msg'}`;
-        div.innerHTML = content.replace(/\n/g, '<br>');
-        chatbox.appendChild(div);
-        scrollToBottom();
-    }
-
-    function scrollToBottom() {
-        chatbox.scrollTop = chatbox.scrollHeight;
-    }
-
-    // ---------- 事件绑定 ----------
-    // 输入框回车发送
-    userInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-
-    sendBtn.addEventListener('click', sendMessage);
-    resetKeyBtn.addEventListener('click', resetKey);
-    clearStorageLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        clearAllData();
-    });
-
-    // 角色面板折叠
-    roleToggle.addEventListener('click', () => {
-        const isOpen = roleContent.classList.toggle('open');
-        roleArrow.classList.toggle('open', isOpen);
-    });
-
-    // 保存角色设定
-    saveRoleBtn.addEventListener('click', () => {
-        const newPrompt = systemPromptTextarea.value.trim();
-        if (newPrompt) {
-            saveSystemPrompt(newPrompt);
-            alert('角色设定已保存！');
-        } else {
-            alert('提示词不能为空。');
-        }
-    });
-
-    // 恢复默认
-    resetRoleBtn.addEventListener('click', () => {
-        resetSystemPrompt();
-        alert('已恢复默认角色。');
-    });
-
-    // 预设按钮
-    document.querySelectorAll('[data-preset]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const key = btn.dataset.preset;
-            applyPreset(key);
-            // 更新文本框显示
-            systemPromptTextarea.value = currentSystemPrompt;
-            alert(`已切换至「${btn.textContent}」角色。`);
+// ---------- 渲染函数 ----------
+function renderRoles() {
+    roleSelector.innerHTML = '';
+    const ids = Object.keys(data.roles);
+    for (const id of ids) {
+        const r = data.roles[id];
+        const tag = document.createElement('span');
+        tag.className = 'tag' + (id === data.currentRoleId ? ' active' : '');
+        tag.innerHTML = `${r.name || '未命名'}${id !== 'default' ? `<span class="del" data-id="${id}">✕</span>` : ''}`;
+        tag.addEventListener('click', (e) => {
+            if (e.target.classList.contains('del')) return;
+            data.currentRoleId = id;
+            saveData();
+            renderAll();
         });
-    });
+        const del = tag.querySelector('.del');
+        if (del) del.addEventListener('click', (e) => { e.stopPropagation(); if (confirm(`删除「${r.name}」？`)) deleteRole(id); });
+        roleSelector.appendChild(tag);
+    }
+    const role = getCurrentRole();
+    currentRoleBadge.textContent = role.name || '未命名';
+    // 填充表单
+    rfName.value = role.name || '';
+    rfTags.value = role.tags || '';
+    rfBg.value = role.background || '';
+    rfPersona.value = role.persona || '';
+    rfSpecial.value = role.special || '';
+}
 
-    // ---------- 初始化 ----------
-    window.onload = function() {
-        // 加载角色设定
-        loadSystemPrompt();
-        // 加载 API Key
-        const hasKey = loadOrPromptKey();
-        if (!hasKey) {
-            sendBtn.disabled = true;
-            chatbox.innerHTML = `<div class="ai-msg" style="align-self:center; color:#b00020; max-width:100%; background:transparent;">
-                ⚠️ 未设置 API Key，请点击右上角 "更换密钥" 输入。
-            </div>`;
+function renderScenes() {
+    branchList.innerHTML = '';
+    const role = getCurrentRole();
+    // 显示当前角色的场景
+    const sceneIds = Object.keys(data.scenes).filter(id => id.includes(role.id));
+    if (sceneIds.length === 0) {
+        // 创建默认场景
+        const sid = 'scene_' + role.id + '_default';
+        data.scenes[sid] = { id: sid, name: '主线', desc: `与「${role.name}」的故事`, tags: '主线', characters: role.name, notes: '', history: [], snapshots: [] };
+        data.currentSceneId = sid;
+        saveData();
+    }
+    for (const id of sceneIds) {
+        const s = data.scenes[id];
+        const item = document.createElement('span');
+        item.className = 'branch-item' + (id === data.currentSceneId ? ' active' : '');
+        item.innerHTML = `${s.name || '未命名'}${id !== 'scene_' + role.id + '_default' ? `<span class="del" data-id="${id}">✕</span>` : ''}`;
+        item.addEventListener('click', (e) => {
+            if (e.target.classList.contains('del')) return;
+            data.currentSceneId = id;
+            saveData();
+            renderAll();
+        });
+        const del = item.querySelector('.del');
+        if (del) del.addEventListener('click', (e) => { e.stopPropagation(); if (confirm(`删除场景「${s.name}」？`)) deleteScene(id); });
+        branchList.appendChild(item);
+    }
+    const scene = getCurrentScene();
+    currentSceneBadge.textContent = scene.name || '主线';
+    sceneName.value = scene.name || '';
+    sceneDesc.value = scene.desc || '';
+    sceneTags.value = scene.tags || '';
+    sceneCharacters.value = scene.characters || '';
+    sceneNotes.value = scene.notes || '';
+}
+
+function renderSims() {
+    simList.innerHTML = '';
+    const ids = Object.keys(data.simulators);
+    for (const id of ids) {
+        const s = data.simulators[id];
+        const item = document.createElement('span');
+        item.className = 'sim-item' + (id === data.activeSimId ? ' active' : '');
+        item.innerHTML = `${s.name || '未命名'} (${s.type === 'world' ? '🌍' : '🎨'})${id !== 'default_sim' ? `<span class="del" data-id="${id}">✕</span>` : ''}`;
+        item.addEventListener('click', (e) => {
+            if (e.target.classList.contains('del')) return;
+            data.activeSimId = (data.activeSimId === id) ? null : id;
+            saveData();
+            renderAll();
+        });
+        const del = item.querySelector('.del');
+        if (del) del.addEventListener('click', (e) => { e.stopPropagation(); if (confirm(`删除模拟器「${s.name}」？`)) deleteSim(id); });
+        simList.appendChild(item);
+    }
+    const active = getActiveSim();
+    if (active) {
+        simName.value = active.name || '';
+        simDesc.value = active.desc || '';
+        simSystem.value = active.systemPrompt || '';
+        simUi.value = active.uiDesc || '';
+        document.querySelectorAll('[data-simtype]').forEach(b => {
+            b.classList.toggle('active', b.dataset.simtype === active.type);
+        });
+    } else {
+        simName.value = '';
+        simDesc.value = '';
+        simSystem.value = '';
+        simUi.value = '';
+    }
+}
+
+function renderChat() {
+    const role = getCurrentRole();
+    const scene = getCurrentScene();
+    const history = scene.history || [];
+    chatbox.innerHTML = '';
+    if (history.length === 0) {
+        chatbox.innerHTML = `<div class="ai-msg" style="align-self:center; color:var(--text-secondary); max-width:100%; background:transparent; border:none; font-size:13px;">
+            📖 「${scene.name}」· 与「${role.name}」的对话开始
+        </div>`;
+        return;
+    }
+    for (const msg of history) {
+        const div = document.createElement('div');
+        div.className = `message ${msg.role === 'user' ? 'user-msg' : 'ai-msg'}`;
+        if (msg.role === 'assistant') {
+            div.innerHTML = `<div class="role-label">${role.name}</div>` + (msg.content || '').replace(/\n/g, '<br>');
         } else {
-            sendBtn.disabled = false;
+            div.textContent = msg.content;
         }
-        // 默认展开角色面板（可选）
-        // 默认折叠
-        roleContent.classList.remove('open');
-        roleArrow.classList.remove('open');
+        chatbox.appendChild(div);
+    }
+    scrollToBottom();
+}
+
+function renderAll() {
+    renderRoles();
+    renderScenes();
+    renderSims();
+    renderChat();
+}
+
+// ---------- 角色操作 ----------
+function createRole(name) {
+    const id = 'role_' + Date.now();
+    data.roles[id] = { id, name: name || '新角色', tags: '', background: '', persona: '', special: '', history: [] };
+    data.currentRoleId = id;
+    saveData();
+    renderAll();
+    return id;
+}
+
+function deleteRole(id) {
+    if (id === 'default') { alert('不能删除默认角色'); return false; }
+    delete data.roles[id];
+    if (data.currentRoleId === id) data.currentRoleId = 'default';
+    // 删除关联场景
+    for (const sid of Object.keys(data.scenes)) {
+        if (sid.includes(id)) delete data.scenes[sid];
+    }
+    data.currentSceneId = null;
+    saveData();
+    renderAll();
+    return true;
+}
+
+function saveCurrentRole() {
+    const role = getCurrentRole();
+    role.name = rfName.value.trim() || '未命名';
+    role.tags = rfTags.value.trim();
+    role.background = rfBg.value.trim();
+    role.persona = rfPersona.value.trim();
+    role.special = rfSpecial.value.trim();
+    saveData();
+    renderAll();
+    alert('角色已保存！');
+}
+
+// ---------- 场景操作 ----------
+function createScene(name) {
+    const role = getCurrentRole();
+    const id = 'scene_' + role.id + '_' + Date.now();
+    data.scenes[id] = {
+        id,
+        name: name || '新场景',
+        desc: '',
+        tags: '',
+        characters: role.name,
+        notes: '',
+        history: [],
+        snapshots: []
     };
+    data.currentSceneId = id;
+    saveData();
+    renderAll();
+    return id;
+}
+
+function deleteScene(id) {
+    const role = getCurrentRole();
+    if (id === 'scene_' + role.id + '_default') { alert('不能删除主线场景'); return false; }
+    delete data.scenes[id];
+    if (data.currentSceneId === id) data.currentSceneId = null;
+    saveData();
+    renderAll();
+    return true;
+}
+
+function saveCurrentScene() {
+    const scene = getCurrentScene();
+    scene.name = sceneName.value.trim() || '未命名场景';
+    scene.desc = sceneDesc.value.trim();
+    scene.tags = sceneTags.value.trim();
+    scene.characters = sceneCharacters.value.trim();
+    scene.notes = sceneNotes.value.trim();
+    saveData();
+    renderAll();
+    alert('场景已保存！');
+}
+
+// 快照存档
+function saveSnapshot() {
+    const scene = getCurrentScene();
+    const snapshot = {
+        id: 'snap_' + Date.now(),
+        time: new Date().toLocaleString(),
+        name: scene.name,
+        desc: scene.desc,
+        tags: scene.tags,
+        characters: scene.characters,
+        notes: scene.notes,
+        history: JSON.parse(JSON.stringify(scene.history || []))
+    };
+    if (!scene.snapshots) scene.snapshots = [];
+    scene.snapshots.push(snapshot);
+    saveData();
+    alert('📸 快照已保存！');
+}
+
+function loadSnapshot() {
+    const scene = getCurrentScene();
+    if (!scene.snapshots || scene.snapshots.length === 0) {
+        alert('没有可用的快照。');
+        return;
+    }
+    // 简单选择：显示列表让用户选择
+    const list = scene.snapshots.map((s, i) => `${i+1}. ${s.time} - ${s.name}`).join('\n');
+    const idx = prompt(`选择要加载的快照 (输入编号):\n${list}\n\n输入 0 取消`);
+    if (idx === null || idx === '0') return;
+    const num = parseInt(idx) - 1;
+    if (isNaN(num) || num < 0 || num >= scene.snapshots.length) {
+        alert('无效编号');
+        return;
+    }
+    const snap = scene.snapshots[num];
+    scene.name = snap.name;
+    scene.desc = snap.desc;
+    scene.tags = snap.tags;
+    scene.characters = snap.characters;
+    scene.notes = snap.notes;
+    scene.history = snap.history;
+    saveData();
+    renderAll();
+    alert('📂 已加载快照！');
+}
+
+// ---------- 模拟器操作 ----------
+function createSim(name, type = 'style') {
+    const id = 'sim_' + Date.now();
+    data.simulators[id] = { id, name: name || '新模拟器', type, desc: '', systemPrompt: '', uiDesc: '' };
+    saveData();
+    renderAll();
+    return id;
+}
+
+function deleteSim(id) {
+    delete data.simulators[id];
+    if (data.activeSimId === id) data.activeSimId = null;
+    saveData();
+    renderAll();
+}
+
+function saveCurrentSim() {
+    const id = data.activeSimId;
+    if (!id || !data.simulators[id]) {
+        alert('请先选择一个模拟器或创建新的。');
+        return;
+    }
+    const sim = data.simulators[id];
+    sim.name = simName.value.trim() || '未命名';
+    sim.desc = simDesc.value.trim();
+    sim.systemPrompt = simSystem.value.trim();
+    sim.uiDesc = simUi.value.trim();
+    // type 从按钮获取
+    const activeTypeBtn = document.querySelector('[data-simtype].active');
+    if (activeTypeBtn) sim.type = activeTypeBtn.dataset.simtype;
+    saveData();
+    renderAll();
+    alert('模拟器已保存！');
+}
+
+function applySimulator() {
+    const id = data.activeSimId;
+    if (!id || !data.simulators[id]) {
+        alert('请先选择或创建一个模拟器。');
+        return;
+    }
+    saveCurrentSim();
+    alert(`🚀 已应用模拟器「${data.simulators[id].name}」！\n后续对话将基于此设定进行。`);
+}
+
+// ---------- 聊天 ----------
+async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    // 指令处理
+    if (text.startsWith('/')) {
+        handleCommand(text);
+        return;
+    }
+
+    if (!apiKey) { alert('请先设置 API Key（点击右上角"API"按钮）。'); return; }
+
+    const role = getCurrentRole();
+    const scene = getCurrentScene();
+    if (!scene.history) scene.history = [];
+
+    scene.history.push({ role: 'user', content: text });
+    appendMessage('user', text);
+    userInput.value = '';
+    userInput.focus();
+    saveData();
+
+    const loadingId = 'loading-' + Date.now();
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'message ai-msg';
+    loadingDiv.id = loadingId;
+    loadingDiv.innerHTML = `<div class="role-label">${role.name}</div><span class="loading-dots">思考中</span>`;
+    chatbox.appendChild(loadingDiv);
+    scrollToBottom();
+    sendBtn.disabled = true;
+
+    try {
+        const systemPrompt = buildFullSystemPrompt();
+        const messages = [{ role: 'system', content: systemPrompt }];
+        const hist = scene.history.slice(-30);
+        for (const msg of hist) {
+            messages.push({ role: msg.role, content: msg.content });
+        }
+
+        const response = await fetch('https://api.deepseek.com/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            body: JSON.stringify({ model: 'deepseek-chat', messages, stream: false })
+        });
+
+        const loadingEl = document.getElementById(loadingId);
+        if (loadingEl) loadingEl.remove();
+
+        if (!response.ok) {
+            let errMsg = `请求失败 (${response.status})`;
+            try { const e = await response.json(); if (e.error?.message) errMsg += `: ${e.error.message}`; } catch (e) {}
+            throw new Error(errMsg);
+        }
+
+        const data2 = await response.json();
+        const reply = data2.choices[0].message.content || '（无内容）';
+        scene.history.push({ role: 'assistant', content: reply });
+        appendMessage('ai', reply);
+        saveData();
+
+    } catch (error) {
+        const loadingEl = document.getElementById(loadingId);
+        if (loadingEl) loadingEl.remove();
+        const errDiv = document.createElement('div');
+        errDiv.className = 'message ai-msg error';
+        errDiv.textContent = '❌ ' + error.message;
+        chatbox.appendChild(errDiv);
+        scrollToBottom();
+        console.error(error);
+    } finally {
+        sendBtn.disabled = false;
+    }
+}
+
+function appendMessage(type, content) {
+    const role = getCurrentRole();
+    const div = document.createElement('div');
+    div.className = `message ${type === 'user' ? 'user-msg' : 'ai-msg'}`;
+    if (type === 'assistant') {
+        div.innerHTML = `<div class="role-label">${role.name}</div>` + (content || '').replace(/\n/g, '<br>');
+    } else {
+        div.textContent = content;
+    }
+    chatbox.appendChild(div);
+    scrollToBottom();
+}
+
+function scrollToBottom() { chatbox.scrollTop = chatbox.scrollHeight; }
+
+// ---------- 指令系统 ----------
+function handleCommand(cmd) {
+    const parts = cmd.slice(1).trim().split(/\s+/);
+    const action = parts[0].toLowerCase();
+    const arg = parts.slice(1).join(' ');
+
+    switch (action) {
+        case 'new':
+            if (!arg) { alert('用法: /new 角色名'); return; }
+            createRole(arg);
+            alert(`已创建角色「${arg}」`);
+            break;
+        case 'switch':
+        case 's':
+            if (!arg) { alert('用法: /switch 角色名'); return; }
+            const found = Object.values(data.roles).find(r => r.name === arg);
+            if (found) { data.currentRoleId = found.id; data.currentSceneId = null; saveData(); renderAll(); }
+            else alert(`未找到角色「${arg}」`);
+            break;
+        case 'del':
+        case 'delete':
+            if (!arg) { alert('用法: /del 角色名'); return; }
+            const foundDel = Object.values(data.roles).find(r => r.name === arg);
+            if (foundDel) deleteRole(foundDel.id);
+            else alert(`未找到角色「${arg}」`);
+            break;
+        case 'scene':
+            if (arg) {
+                const scene = getCurrentScene();
+                scene.desc = arg;
+                scene.history = scene.history || [];
+                scene.history.push({ role: 'assistant', content: `📌 场景更新：${arg}` });
+                saveData();
+                renderAll();
+                alert('场景已更新！');
+            } else {
+                alert('用法: /scene 场景描述');
+            }
+            break;
+        case 'sim':
+            if (!arg) { alert('用法: /sim 模拟器名'); return; }
+            const foundSim = Object.values(data.simulators).find(s => s.name === arg);
+            if (foundSim) {
+                data.activeSimId = (data.activeSimId === foundSim.id) ? null : foundSim.id;
+                saveData();
+                renderAll();
+                alert(data.activeSimId ? `已激活「${arg}」` : `已停用「${arg}」`);
+            } else {
+                alert(`未找到模拟器「${arg}」\n可用: ${Object.values(data.simulators).map(s=>s.name).join(', ') || '无'}`);
+            }
+            break;
+        case 'clear':
+            const scene2 = getCurrentScene();
+            if (confirm(`清空「${scene2.name}」的对话？`)) {
+                scene2.history = [];
+                saveData();
+                renderChat();
+            }
+            break;
+        case 'help':
+            alert(
+                '📖 可用指令：\n' +
+                '/new 角色名 - 创建角色\n' +
+                '/switch 角色名 - 切换角色\n' +
+                '/del 角色名 - 删除角色\n' +
+                '/scene 描述 - 更新场景\n' +
+                '/sim 模拟器名 - 切换模拟器\n' +
+                '/clear - 清空对话\n' +
+                '/help - 显示帮助'
+            );
+            break;
+        default:
+            alert(`未知指令: /${action}\n输入 /help 查看所有指令`);
+    }
+    userInput.value = '';
+}
+
+// ---------- Tab切换 ----------
+document.querySelectorAll('.tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tabId = btn.dataset.tab;
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        currentTab = tabId;
+    });
+});
+
+// ---------- 事件绑定 ----------
+userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+sendBtn.addEventListener('click', sendMessage);
+
+$('save-role-btn').addEventListener('click', saveCurrentRole);
+$('new-role-btn').addEventListener('click', () => {
+    const name = prompt('输入新角色名称：');
+    if (name && name.trim()) createRole(name.trim());
+});
+$('delete-role-btn').addEventListener('click', () => {
+    const role = getCurrentRole();
+    if (role.id === 'default') { alert('不能删除默认角色'); return; }
+    if (confirm(`确认删除「${role.name}」？`)) deleteRole(role.id);
+});
+
+$('save-scene-btn').addEventListener('click', saveCurrentScene);
+$('new-branch-btn').addEventListener('click', () => {
+    const name = prompt('输入新场景名称：');
+    if (name && name.trim()) createScene(name.trim());
+});
+$('delete-scene-btn').addEventListener('click', () => {
+    const scene = getCurrentScene();
+    const role = getCurrentRole();
+    if (scene.id === 'scene_' + role.id + '_default') { alert('不能删除主线场景'); return; }
+    if (confirm(`确认删除「${scene.name}」？`)) deleteScene(scene.id);
+});
+$('save-snapshot-btn').addEventListener('click', saveSnapshot);
+$('load-snapshot-btn').addEventListener('click', loadSnapshot);
+
+$('new-sim-btn').addEventListener('click', () => {
+    const name = prompt('输入模拟器名称：');
+    if (name && name.trim()) {
+        const type = confirm('点击"确定"为世界观RPG，"取消"为风格模拟器') ? 'world' : 'style';
+        createSim(name.trim(), type);
+    }
+});
+$('save-sim-btn').addEventListener('click', saveCurrentSim);
+$('delete-sim-btn').addEventListener('click', () => {
+    const id = data.activeSimId;
+    if (!id || !data.simulators[id]) { alert('请先选择一个模拟器'); return; }
+    if (confirm(`删除「${data.simulators[id].name}」？`)) deleteSim(id);
+});
+$('apply-sim-btn').addEventListener('click', applySimulator);
+
+// 模拟器类型切换
+document.querySelectorAll('[data-simtype]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-simtype]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (data.activeSimId && data.simulators[data.activeSimId]) {
+            data.simulators[data.activeSimId].type = btn.dataset.simtype;
+            saveData();
+        }
+    });
+});
+
+$('reset-key-btn').addEventListener('click', () => {
+    const key = prompt('输入 DeepSeek API Key (sk-开头):', apiKey || '');
+    if (key && key.trim().startsWith('sk-')) { saveApiKey(key.trim()); alert('API Key 已更新！'); }
+    else if (key !== null && key !== '') alert('格式不正确，请以 sk- 开头');
+});
+
+$('clear-all-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (confirm('清除所有数据？')) {
+        localStorage.removeItem('deepseek_universe_data');
+        localStorage.removeItem('deepseek_api_key');
+        apiKey = '';
+        loadData();
+        saveData();
+        renderAll();
+        alert('已清除所有数据');
+    }
+});
+
+// ---------- 初始化 ----------
+function init() {
+    loadData();
+    loadApiKey();
+    // 确保场景存在
+    getCurrentScene();
+    saveData();
+    renderAll();
+    if (!apiKey) {
+        setTimeout(() => {
+            const key = prompt('请输入 DeepSeek API Key (sk-开头):');
+            if (key && key.trim().startsWith('sk-')) saveApiKey(key.trim());
+        }, 500);
+    }
+}
+
+init();
+console.log('🌌 角色宇宙已加载！');
+console.log('📖 指令: /new, /switch, /scene, /sim, /clear, /help');
 </script>
 </body>
 </html>
